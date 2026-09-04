@@ -230,7 +230,12 @@ export function Dashboard() {
                   <XAxis dataKey="name" tick={{ fontSize: 11 }} />
                   <YAxis tickFormatter={(v) => fmtCurrency(v as number)} tick={{ fontSize: 11 }} />
                   <Tooltip formatter={(v) => fmtCurrencyFull(v as number)} />
-                  <Legend />
+                  <Legend
+                    payload={[
+                      ...(costMode === "actual"     || costMode === "both"     ? [{ value: "Actual",     type: "rect" as const, id: "Actual",     color: "#3b82f6" }] : []),
+                      ...(costMode === "forecasted" || costMode === "both"     ? [{ value: "Forecasted", type: "rect" as const, id: "Forecasted", color: "#93c5fd" }] : []),
+                    ]}
+                  />
                   {(costMode === "actual"     || costMode === "both") && (
                     <Bar dataKey="Actual" radius={[3, 3, 0, 0]} fill="#3b82f6">
                       {costChartData.map((entry) => (
