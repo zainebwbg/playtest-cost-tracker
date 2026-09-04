@@ -44,14 +44,17 @@ export function buildPEGsWithCosts(
     }
   }
 
-  // ── Actual cost: split each study's cost evenly across linked PEGs ───────
-  const actualCostByPEG = new Map<string, number>();
+  // ── Actual + Forecasted cost: split each study's costs evenly across linked PEGs ──
+  const actualCostByPEG     = new Map<string, number>();
+  const forecastedCostByPEG = new Map<string, number>();
   for (const study of studies) {
     const linkedIds = study.pegIds.length > 0 ? study.pegIds : (study.pegId ? [study.pegId] : []);
     if (linkedIds.length === 0) continue;
-    const share = study.actualCost / linkedIds.length;
+    const actualShare     = study.actualCost     / linkedIds.length;
+    const forecastedShare = study.forecastedCost / linkedIds.length;
     for (const pid of linkedIds) {
-      actualCostByPEG.set(pid, (actualCostByPEG.get(pid) ?? 0) + share);
+      actualCostByPEG.set(pid,     (actualCostByPEG.get(pid)     ?? 0) + actualShare);
+      forecastedCostByPEG.set(pid, (forecastedCostByPEG.get(pid) ?? 0) + forecastedShare);
     }
   }
 
@@ -68,9 +71,9 @@ export function buildPEGsWithCosts(
   return pegs.map((peg) => {
     const pegStudies       = studiesByPEG.get(peg.id) ?? [];
     const pegInsights      = insightsByPEG.get(peg.id) ?? [];
-    const totalActualCost  = actualCostByPEG.get(peg.id) ?? 0;
-    // Forecasted cost comes from the PEG's own "Forecasted Cost" field
-    const totalForecastedCost = peg.forecastedCost;
+    const totalActualCost     = actualCostByPEG.get(peg.id)     ?? 0;
+    // Forecasted cost = sum of linked study forecasted costs split evenly across PEGs
+    const totalForecastedCost = forecastedCostByPEG.get(peg.id) ?? 0;
     return {
       ...peg,
       studies:  pegStudies,
