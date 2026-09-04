@@ -232,10 +232,7 @@ export function Dashboard() {
                   <Tooltip formatter={(v) => fmtCurrencyFull(v as number)} />
                   <Legend />
                   {(costMode === "actual"     || costMode === "both") && (
-                    <Bar dataKey="Actual" radius={[3, 3, 0, 0]}
-                      fill={undefined}
-                      // Highlight selected phase bar
-                    >
+                    <Bar dataKey="Actual" radius={[3, 3, 0, 0]} fill="#3b82f6">
                       {costChartData.map((entry) => (
                         <Cell
                           key={entry.name}
@@ -245,9 +242,7 @@ export function Dashboard() {
                     </Bar>
                   )}
                   {(costMode === "forecasted" || costMode === "both") && (
-                    <Bar dataKey="Forecasted" radius={[3, 3, 0, 0]}
-                      fill={undefined}
-                    >
+                    <Bar dataKey="Forecasted" radius={[3, 3, 0, 0]} fill="#93c5fd">
                       {costChartData.map((entry) => (
                         <Cell
                           key={entry.name}
