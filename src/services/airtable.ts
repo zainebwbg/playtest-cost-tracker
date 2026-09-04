@@ -162,10 +162,8 @@ function normalizeStudy(
 // ─── Public API ───────────────────────────────────────────────────────────────
 
 export async function fetchGames(): Promise<Game[]> {
-  const records = await fetchAllRecords<GameFields>(TABLE_GAMES, {
-    sort: JSON.stringify([{ field: "Name", direction: "asc" }]),
-  });
-  return records.map(normalizeGame);
+  const records = await fetchAllRecords<GameFields>(TABLE_GAMES);
+  return records.map(normalizeGame).sort((a, b) => a.name.localeCompare(b.name));
 }
 
 export async function fetchProductGoals(
@@ -186,10 +184,15 @@ export async function fetchPlayerExperienceGoals(
 export async function fetchStudies(
   pegsById: Map<string, PlayerExperienceGoal>
 ): Promise<Study[]> {
-  const records = await fetchAllRecords<StudyFields>(TABLE_STUDIES, {
-    sort: JSON.stringify([{ field: "Date", direction: "desc" }]),
-  });
-  return records.map((r) => normalizeStudy(r, pegsById));
+  const records = await fetchAllRecords<StudyFields>(TABLE_STUDIES);
+  return records
+    .map((r) => normalizeStudy(r, pegsById))
+    .sort((a, b) => {
+      if (!a.date && !b.date) return 0;
+      if (!a.date) return 1;
+      if (!b.date) return -1;
+      return b.date.localeCompare(a.date); // newest first
+    });
 }
 
 /**
@@ -209,10 +212,15 @@ export async function fetchAllData() {
   const pegs = pegRecords.map((r) => normalizePEG(r, productGoalsById, gamesById));
   const pegsById = new Map(pegs.map((p) => [p.id, p]));
 
-  const studyRecords = await fetchAllRecords<StudyFields>(TABLE_STUDIES, {
-    sort: JSON.stringify([{ field: "Date", direction: "desc" }]),
-  });
-  const studies = studyRecords.map((r) => normalizeStudy(r, pegsById));
+  const studyRecords = await fetchAllRecords<StudyFields>(TABLE_STUDIES);
+  const studies = studyRecords
+    .map((r) => normalizeStudy(r, pegsById))
+    .sort((a, b) => {
+      if (!a.date && !b.date) return 0;
+      if (!a.date) return 1;
+      if (!b.date) return -1;
+      return b.date.localeCompare(a.date);
+    });
 
   const studiesById = new Map(studies.map((s) => [s.id, s]));
   const pegsById2   = new Map(pegs.map((p) => [p.id, p]));
