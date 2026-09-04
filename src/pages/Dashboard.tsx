@@ -229,8 +229,7 @@ export function Dashboard() {
 
           {/* Chart 2 — Cost by PX Goal */}
           <div className="bg-white rounded-lg border border-gray-200 p-5">
-            <h2 className="text-sm font-semibold text-gray-700 mb-1">{pegCostChartLabel}</h2>
-            <p className="text-xs text-gray-400 mb-3">Study costs split evenly across linked PX Goals</p>
+            <h2 className="text-sm font-semibold text-gray-700 mb-4">{pegCostChartLabel}</h2>
             {pegCostChartData.length === 0 ? (
               <p className="text-sm text-gray-400 py-10 text-center">No cost data yet.</p>
             ) : (
