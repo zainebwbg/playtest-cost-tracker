@@ -175,7 +175,7 @@ export function Reports() {
                 <Tooltip formatter={(v) => fmtCurrencyFull(v as number)} />
                 <Legend />
                 <Bar dataKey="Actual" fill="#3b82f6" radius={[3, 3, 0, 0]} />
-                <Bar dataKey="Forecasted" fill="#d1d5db" radius={[3, 3, 0, 0]} />
+                <Bar dataKey="Forecasted" fill="#93c5fd" radius={[3, 3, 0, 0]} />
               </BarChart>
             </ResponsiveContainer>
           </div>
@@ -247,16 +247,22 @@ export function Reports() {
             <table className="min-w-full divide-y divide-gray-100">
               <thead className="bg-gray-50">
                 <tr>
-                  {["Phase", "Studies", "Actual Spend", "Forecasted", "Variance", "Avg Cost / Study"].map(
-                    (h) => (
-                      <th
-                        key={h}
-                        className="px-4 py-2.5 text-left text-xs font-semibold text-gray-500 uppercase tracking-wide"
-                      >
-                        {h}
-                      </th>
-                    )
-                  )}
+                  {[
+                    { label: "Phase",            color: null },
+                    { label: "Studies",          color: null },
+                    { label: "Actual Spend",     color: "#3b82f6" },
+                    { label: "Forecasted",       color: "#93c5fd" },
+                    { label: "Variance",         color: null },
+                    { label: "Avg Cost / Study", color: null },
+                  ].map(({ label, color }) => (
+                    <th
+                      key={label}
+                      className="px-4 py-2.5 text-left text-xs font-semibold uppercase tracking-wide"
+                      style={{ color: color ?? "#6b7280" }}
+                    >
+                      {label}
+                    </th>
+                  ))}
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-50">
@@ -275,10 +281,10 @@ export function Reports() {
                       <td className="px-4 py-3 text-sm text-gray-600">
                         {p.studyCount}
                       </td>
-                      <td className="px-4 py-3 text-sm font-medium text-gray-900">
+                      <td className="px-4 py-3 text-sm font-medium" style={{ color: "#3b82f6" }}>
                         {fmtCurrencyFull(p.actualCost)}
                       </td>
-                      <td className="px-4 py-3 text-sm text-gray-500">
+                      <td className="px-4 py-3 text-sm font-medium" style={{ color: "#93c5fd" }}>
                         {fmtCurrencyFull(p.forecastedCost)}
                       </td>
                       <td className="px-4 py-3">
