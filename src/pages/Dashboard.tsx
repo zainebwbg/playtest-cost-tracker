@@ -203,7 +203,7 @@ export function Dashboard() {
                 <Tooltip formatter={(v) => fmtCurrencyFull(v as number)} />
                 <Legend />
                 {(costMode === "actual"    || costMode === "both") && <Bar dataKey="Actual"     fill="#3b82f6" radius={[3, 3, 0, 0]} />}
-                {(costMode === "forecasted" || costMode === "both") && <Bar dataKey="Forecasted" fill="#d1d5db" radius={[3, 3, 0, 0]} />}
+                {(costMode === "forecasted" || costMode === "both") && <Bar dataKey="Forecasted" fill="#93c5fd" radius={[3, 3, 0, 0]} />}
               </BarChart>
             </ResponsiveContainer>
           </div>
@@ -244,7 +244,7 @@ export function Dashboard() {
         {/* ── Active Goals ── */}
         <div className="bg-white rounded-lg border border-gray-200">
           <div className="px-5 py-4 border-b border-gray-100 flex items-center justify-between">
-            <h2 className="text-sm font-semibold text-gray-700">Active Player Experience Goals</h2>
+            <h2 className="text-sm font-semibold text-gray-700">Active PX Goals</h2>
             <Link to="/goals" className="text-xs text-blue-600 hover:text-blue-700 font-medium">View all</Link>
           </div>
           <div className="divide-y divide-gray-50">
@@ -305,7 +305,7 @@ export function Dashboard() {
               <table className="min-w-full divide-y divide-gray-100">
                 <thead className="bg-gray-50">
                   <tr>
-                    {["Game", "Phase", "PEGs", "Studies", "Actual Spend", "Forecasted", "Variance"].map((h) => (
+                    {["Game", "Phase", "PX Goals", "Studies", "Actual Spend", "Forecasted", "Variance"].map((h) => (
                       <th key={h} className="px-4 py-2.5 text-left text-xs font-semibold text-gray-500 uppercase tracking-wide">{h}</th>
                     ))}
                   </tr>

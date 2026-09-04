@@ -160,7 +160,7 @@ export function GoalDetail() {
                 <p className="text-sm text-gray-400 mb-2">No insights captured yet.</p>
                 <p className="text-xs text-gray-400">
                   Add insights in Airtable → Insights table, link them to a Study and this
-                  Player Experience Goal.
+                  PX Goal.
                 </p>
               </div>
             ) : (

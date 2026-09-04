@@ -290,7 +290,7 @@ export function Goals() {
     <div>
       <PageHeader
         title="Goal Insights"
-        subtitle={`${totalInsights} insight${totalInsights !== 1 ? "s" : ""} across ${filteredPEGs.length} player experience goal${filteredPEGs.length !== 1 ? "s" : ""}`}
+        subtitle={`${totalInsights} insight${totalInsights !== 1 ? "s" : ""} across ${filteredPEGs.length} PX Goal${filteredPEGs.length !== 1 ? "s" : ""}`}
       />
 
       {/* ── Game filter pills ── */}

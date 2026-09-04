@@ -120,7 +120,7 @@ export function GameDetail() {
         ) : (
           <div className="space-y-4">
             <h2 className="text-sm font-semibold text-gray-700">
-              Product Goals &amp; Player Experience Goals
+              Product Goals &amp; PX Goals
             </h2>
             {gamePGs.map((pg) => {
               const pgPEGs = gamePEGs.filter((peg) => peg.productGoalId === pg.id);

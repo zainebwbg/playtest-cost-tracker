@@ -105,31 +105,39 @@ export function buildPhaseCostBreakdown(
   pegsWithCosts: PEGWithCosts[],
   gameId?: string
 ): PhaseCostBreakdown[] {
-  const phases: DevelopmentPhase[] = [
-    "Concept",
-    "Pre Production",
-    "Production",
-    "Alpha",
-    "Beta",
-    "Launch",
+  // Use a canonical order — phases not in this list appear at the end
+  const PHASE_ORDER: DevelopmentPhase[] = [
+    "Concept", "Pre Production", "Production", "Alpha", "Beta", "Launch",
   ];
 
   const filtered = gameId
     ? pegsWithCosts.filter((p) => p.gameId === gameId)
     : pegsWithCosts;
 
-  return phases
-    .map((phase) => {
-      const inPhase = filtered.filter((p) => p.developmentPhase === phase);
-      return {
-        phase,
-        actualCost: inPhase.reduce((s, p) => s + p.totalActualCost, 0),
-        forecastedCost: inPhase.reduce((s, p) => s + p.totalForecastedCost, 0),
-        pegCount: inPhase.length,
-        studyCount: inPhase.reduce((s, p) => s + p.studyCount, 0),
-      };
-    })
-    .filter((p) => p.pegCount > 0);
+  // Group by whatever phase values actually exist in the data
+  const byPhase = new Map<string, typeof filtered>();
+  for (const p of filtered) {
+    const ph = p.developmentPhase || "Unset";
+    if (!byPhase.has(ph)) byPhase.set(ph, []);
+    byPhase.get(ph)!.push(p);
+  }
+
+  return [...byPhase.entries()]
+    .map(([phase, pegs]) => ({
+      phase: phase as DevelopmentPhase,
+      actualCost:     pegs.reduce((s, p) => s + p.totalActualCost,     0),
+      forecastedCost: pegs.reduce((s, p) => s + p.totalForecastedCost, 0),
+      pegCount:       pegs.length,
+      studyCount:     pegs.reduce((s, p) => s + p.studyCount,          0),
+    }))
+    .sort((a, b) => {
+      const ia = PHASE_ORDER.indexOf(a.phase as DevelopmentPhase);
+      const ib = PHASE_ORDER.indexOf(b.phase as DevelopmentPhase);
+      if (ia === -1 && ib === -1) return 0;
+      if (ia === -1) return 1;
+      if (ib === -1) return -1;
+      return ia - ib;
+    });
 }
 
 // ─── Context ──────────────────────────────────────────────────────────────────

@@ -341,7 +341,7 @@ export function Reports() {
         <div className="bg-white rounded-lg border border-gray-200">
           <div className="px-5 py-4 border-b border-gray-100">
             <h2 className="text-sm font-semibold text-gray-700">
-              Highest Cost Player Experience Goals
+              Highest Cost PX Goals
             </h2>
           </div>
           <div className="overflow-x-auto">
