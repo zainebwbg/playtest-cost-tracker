@@ -88,7 +88,7 @@ function normalizeGame(record: AirtableRecord<GameFields>): Game {
     name: f.Name ?? "",
     description: f.Description ?? "",
     status: f.Status ?? "Active",
-    currentPhase: f["Current Phase"] ?? "Discovery",
+    currentPhase: f["Current Phase"] ?? "Concept",
     studio: f.Studio ?? "",
     targetLaunchDate: f["Target Launch Date"] ?? null,
   };
@@ -128,7 +128,7 @@ function normalizePEG(
     productGoalName: productGoal?.name ?? "",
     gameId: productGoal?.gameId ?? "",
     gameName: game?.name ?? "",
-    developmentPhase: f["Development Phase"] ?? "Discovery",
+    developmentPhase: f["Development Phase"] ?? "Concept",
     status: f.Status ?? "Not Started",
     forecastedCost: f["Forecasted Cost"] ?? 0,
     notes: f.Notes ?? "",
