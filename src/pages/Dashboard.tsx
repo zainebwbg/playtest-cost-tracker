@@ -43,6 +43,19 @@ export function Dashboard() {
   const [costMode, setCostMode] = useState<CostMode>("both");
   const [selectedGameId, setSelectedGameId] = useState<string>("all");
 
+  // ─── All hooks must come before any early returns ─────────────────────────
+  const filteredPEGs = useMemo<PEGWithCosts[]>(
+    () => selectedGameId === "all"
+      ? pegsWithCosts
+      : pegsWithCosts.filter((p) => p.gameId === selectedGameId),
+    [pegsWithCosts, selectedGameId]
+  );
+
+  const selectedGame = useMemo(
+    () => gameSummaries.find((g) => g.id === selectedGameId) ?? null,
+    [gameSummaries, selectedGameId]
+  );
+
   if (loading) return <LoadingSpinner label="Loading dashboard…" />;
   if (error) return <ErrorBanner message={error} />;
 
@@ -62,19 +75,6 @@ export function Dashboard() {
       </div>
     );
   }
-
-  // ─── Filtered data based on selected game ──────────────────────────────────
-  const filteredPEGs: PEGWithCosts[] = useMemo(
-    () => selectedGameId === "all"
-      ? pegsWithCosts
-      : pegsWithCosts.filter((p) => p.gameId === selectedGameId),
-    [pegsWithCosts, selectedGameId]
-  );
-
-  const selectedGame = useMemo(
-    () => gameSummaries.find((g) => g.id === selectedGameId) ?? null,
-    [gameSummaries, selectedGameId]
-  );
 
   // ─── KPI aggregates ────────────────────────────────────────────────────────
   const totalForecast  = filteredPEGs.reduce((s, p) => s + p.totalForecastedCost, 0);
