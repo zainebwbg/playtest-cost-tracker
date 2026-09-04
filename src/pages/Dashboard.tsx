@@ -188,7 +188,7 @@ export function Dashboard() {
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           {/* Chart 1 — Cost by Game or Cost by Development Phase */}
           <div className="bg-white rounded-lg border border-gray-200 p-5">
-            <h2 className="text-sm font-semibold text-gray-700 mb-4">{costChartLabel}</h2>
+            <h2 className="text-base font-bold text-gray-900 mb-4">{costChartLabel}</h2>
             {costChartData.length === 0 ? (
               <p className="text-sm text-gray-400 py-10 text-center">
                 {selectedGameId === "all"
@@ -212,7 +212,7 @@ export function Dashboard() {
 
           {/* Chart 2 — Cost by PX Goal */}
           <div className="bg-white rounded-lg border border-gray-200 p-5">
-            <h2 className="text-sm font-semibold text-gray-700 mb-4">{pegCostChartLabel}</h2>
+            <h2 className="text-base font-bold text-gray-900 mb-4">{pegCostChartLabel}</h2>
             {pegCostChartData.length === 0 ? (
               <p className="text-sm text-gray-400 py-10 text-center">No cost data yet.</p>
             ) : (
@@ -235,7 +235,7 @@ export function Dashboard() {
         {/* ── Active Goals ── */}
         <div className="bg-white rounded-lg border border-gray-200">
           <div className="px-5 py-4 border-b border-gray-100 flex items-center justify-between">
-            <h2 className="text-sm font-semibold text-gray-700">Active PX Goals</h2>
+            <h2 className="text-base font-bold text-gray-900">Active PX Goals</h2>
             <Link to="/goals" className="text-xs text-blue-600 hover:text-blue-700 font-medium">View all</Link>
           </div>
           <div className="divide-y divide-gray-50">
@@ -264,7 +264,7 @@ export function Dashboard() {
         {recentInsights.length > 0 && (
           <div className="bg-white rounded-lg border border-gray-200">
             <div className="px-5 py-4 border-b border-gray-100 flex items-center justify-between">
-              <h2 className="text-sm font-semibold text-gray-700">Recent Insights</h2>
+              <h2 className="text-base font-bold text-gray-900">Recent Insights</h2>
             </div>
             <div className="divide-y divide-gray-50">
               {recentInsights.map((ins) => (
@@ -289,7 +289,7 @@ export function Dashboard() {
         {selectedGameId === "all" && (
           <div className="bg-white rounded-lg border border-gray-200">
             <div className="px-5 py-4 border-b border-gray-100 flex items-center justify-between">
-              <h2 className="text-sm font-semibold text-gray-700">Game Summaries</h2>
+              <h2 className="text-base font-bold text-gray-900">Game Summaries</h2>
               <Link to="/games" className="text-xs text-blue-600 hover:text-blue-700 font-medium">View all</Link>
             </div>
             <div className="overflow-x-auto">
