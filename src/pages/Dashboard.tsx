@@ -1,8 +1,9 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useCallback } from "react";
 import { Link } from "react-router-dom";
 import {
   BarChart,
   Bar,
+  Cell,
   XAxis,
   YAxis,
   CartesianGrid,
@@ -32,6 +33,12 @@ export function Dashboard() {
   const { loading, error, gameSummaries, pegsWithCosts, studies, insights, isConfigured } = useApp();
   const [costMode, setCostMode] = useState<CostMode>("both");
   const [selectedGameId, setSelectedGameId] = useState<string>("all");
+  const [selectedPhase, setSelectedPhase] = useState<string | null>(null);
+
+  const selectGame = useCallback((id: string) => {
+    setSelectedGameId(id);
+    setSelectedPhase(null); // reset phase drill-down when game changes
+  }, []);
 
   // ─── All hooks must come before any early returns ─────────────────────────
   const filteredPEGs = useMemo<PEGWithCosts[]>(
@@ -45,6 +52,17 @@ export function Dashboard() {
     () => gameSummaries.find((g) => g.id === selectedGameId) ?? null,
     [gameSummaries, selectedGameId]
   );
+
+  // PEGs whose studies were conducted in the clicked phase
+  const phaseDrillPEGs = useMemo<PEGWithCosts[] | null>(() => {
+    if (!selectedPhase || selectedGameId === "all") return null;
+    const pegIdsInPhase = new Set(
+      studies
+        .filter((s) => s.developmentPhase === selectedPhase && s.gameId === selectedGameId)
+        .flatMap((s) => (s.pegIds.length > 0 ? s.pegIds : s.pegId ? [s.pegId] : []))
+    );
+    return filteredPEGs.filter((p) => pegIdsInPhase.has(p.id));
+  }, [selectedPhase, selectedGameId, studies, filteredPEGs]);
 
   if (loading) return <LoadingSpinner label="Loading dashboard…" />;
   if (error) return <ErrorBanner message={error} />;
@@ -149,7 +167,7 @@ export function Dashboard() {
       {/* ── Game filter pills ── */}
       <div className="px-8 pt-4 pb-0 flex flex-wrap items-center gap-2">
         <button
-          onClick={() => setSelectedGameId("all")}
+          onClick={() => selectGame("all")}
           className={`px-3 py-1.5 rounded-full text-xs font-medium border transition-colors ${
             selectedGameId === "all"
               ? "bg-blue-600 border-blue-600 text-white"
@@ -161,7 +179,7 @@ export function Dashboard() {
         {gameSummaries.map((g) => (
           <button
             key={g.id}
-            onClick={() => setSelectedGameId(g.id)}
+            onClick={() => selectGame(g.id)}
             className={`px-3 py-1.5 rounded-full text-xs font-medium border transition-colors ${
               selectedGameId === g.id
                 ? "bg-blue-600 border-blue-600 text-white"
@@ -197,14 +215,49 @@ export function Dashboard() {
               </p>
             ) : (
               <ResponsiveContainer width="100%" height={220}>
-                <BarChart data={costChartData} barCategoryGap="30%">
+                <BarChart
+                  data={costChartData}
+                  barCategoryGap="30%"
+                  style={selectedGameId !== "all" ? { cursor: "pointer" } : undefined}
+                  onClick={
+                    selectedGameId !== "all"
+                      ? (data) => {
+                          const phase = data?.activeLabel as string | undefined;
+                          if (phase) setSelectedPhase((p) => (p === phase ? null : phase));
+                        }
+                      : undefined
+                  }
+                >
                   <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
                   <XAxis dataKey="name" tick={{ fontSize: 11 }} />
                   <YAxis tickFormatter={(v) => fmtCurrency(v as number)} tick={{ fontSize: 11 }} />
                   <Tooltip formatter={(v) => fmtCurrencyFull(v as number)} />
                   <Legend />
-                  {(costMode === "actual"     || costMode === "both") && <Bar dataKey="Actual"     fill="#3b82f6" radius={[3, 3, 0, 0]} />}
-                  {(costMode === "forecasted" || costMode === "both") && <Bar dataKey="Forecasted" fill="#93c5fd" radius={[3, 3, 0, 0]} />}
+                  {(costMode === "actual"     || costMode === "both") && (
+                    <Bar dataKey="Actual" radius={[3, 3, 0, 0]}
+                      fill={undefined}
+                      // Highlight selected phase bar
+                    >
+                      {costChartData.map((entry) => (
+                        <Cell
+                          key={entry.name}
+                          fill={selectedPhase && entry.name !== selectedPhase ? "#bfdbfe" : "#3b82f6"}
+                        />
+                      ))}
+                    </Bar>
+                  )}
+                  {(costMode === "forecasted" || costMode === "both") && (
+                    <Bar dataKey="Forecasted" radius={[3, 3, 0, 0]}
+                      fill={undefined}
+                    >
+                      {costChartData.map((entry) => (
+                        <Cell
+                          key={entry.name}
+                          fill={selectedPhase && entry.name !== selectedPhase ? "#e0f2fe" : "#93c5fd"}
+                        />
+                      ))}
+                    </Bar>
+                  )}
                 </BarChart>
               </ResponsiveContainer>
             )}
@@ -235,14 +288,32 @@ export function Dashboard() {
         {/* ── Active Goals ── */}
         <div className="bg-white rounded-lg border border-gray-200">
           <div className="px-5 py-4 border-b border-gray-100 flex items-center justify-between">
-            <h2 className="text-base font-bold text-gray-900">Active PX Goals</h2>
+            <div className="flex items-center gap-2 flex-wrap">
+              <h2 className="text-base font-bold text-gray-900">
+                {phaseDrillPEGs
+                  ? `PX Goals · ${selectedPhase}`
+                  : "Active PX Goals"}
+              </h2>
+              {selectedPhase && (
+                <button
+                  onClick={() => setSelectedPhase(null)}
+                  className="text-xs text-gray-400 hover:text-gray-600 underline"
+                >
+                  Clear
+                </button>
+              )}
+            </div>
             <Link to="/goals" className="text-xs text-blue-600 hover:text-blue-700 font-medium">View all</Link>
           </div>
           <div className="divide-y divide-gray-50">
-            {recentPEGs.length === 0 ? (
-              <p className="px-5 py-6 text-sm text-gray-400">No active goals for this selection.</p>
+            {(phaseDrillPEGs ?? recentPEGs).length === 0 ? (
+              <p className="px-5 py-6 text-sm text-gray-400">
+                {selectedPhase
+                  ? `No PX Goals have studies in the ${selectedPhase} phase yet.`
+                  : "No active goals for this selection."}
+              </p>
             ) : (
-              recentPEGs.map((peg) => (
+              (phaseDrillPEGs ?? recentPEGs).map((peg) => (
                 <Link key={peg.id} to={`/goals/${peg.id}`}
                   className="flex items-center gap-4 px-5 py-3.5 hover:bg-gray-50 transition-colors">
                   <div className="flex-1 min-w-0">
@@ -250,7 +321,6 @@ export function Dashboard() {
                     <p className="text-xs text-gray-400 mt-0.5">{peg.gameName} · {peg.productGoalName}</p>
                   </div>
                   <div className="flex items-center gap-3 flex-shrink-0">
-                    <PhaseBadge phase={peg.developmentPhase} />
                     <StatusBadge status={peg.status} />
                     <VarianceCell value={peg.variance} />
                   </div>
