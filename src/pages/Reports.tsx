@@ -58,8 +58,9 @@ export function Reports() {
       ? pegsWithCosts
       : pegsWithCosts.filter((p) => p.gameId === selectedGame);
 
+  // Phase breakdown is now study-based (uses Development Phase on each Study)
   const phaseBreakdown = buildPhaseCostBreakdown(
-    pegsWithCosts,
+    studies,
     selectedGame === "all" ? undefined : selectedGame
   );
 
@@ -85,7 +86,7 @@ export function Reports() {
     name: p.phase,
     Actual: p.actualCost,
     Forecasted: p.forecastedCost,
-    count: p.pegCount,
+    count: p.studyCount,
   }));
 
   // ── Over/under budget PEGs ────────────────────────────────────────────────
@@ -233,7 +234,7 @@ export function Reports() {
             <table className="min-w-full divide-y divide-gray-100">
               <thead className="bg-gray-50">
                 <tr>
-                  {["Phase", "Goals", "Studies", "Actual Spend", "Forecasted", "Variance", "Avg Cost / Goal"].map(
+                  {["Phase", "Studies", "Actual Spend", "Forecasted", "Variance", "Avg Cost / Study"].map(
                     (h) => (
                       <th
                         key={h}
@@ -256,10 +257,7 @@ export function Reports() {
                   phaseBreakdown.map((p) => (
                     <tr key={p.phase} className="hover:bg-gray-50">
                       <td className="px-4 py-3">
-                        <PhaseBadge phase={p.phase} />
-                      </td>
-                      <td className="px-4 py-3 text-sm text-gray-600">
-                        {p.pegCount}
+                        <PhaseBadge phase={p.phase as import("../types").DevelopmentPhase} />
                       </td>
                       <td className="px-4 py-3 text-sm text-gray-600">
                         {p.studyCount}
@@ -274,8 +272,8 @@ export function Reports() {
                         <VarianceCell value={p.forecastedCost - p.actualCost} />
                       </td>
                       <td className="px-4 py-3 text-sm text-gray-600">
-                        {p.pegCount > 0
-                          ? fmtCurrencyFull(Math.round(p.actualCost / p.pegCount))
+                        {p.studyCount > 0
+                          ? fmtCurrencyFull(Math.round(p.actualCost / p.studyCount))
                           : "—"}
                       </td>
                     </tr>

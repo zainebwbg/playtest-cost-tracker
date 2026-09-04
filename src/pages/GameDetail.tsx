@@ -25,7 +25,7 @@ import {
 
 export function GameDetail() {
   const { id } = useParams<{ id: string }>();
-  const { loading, error, gameSummaries, productGoals, pegsWithCosts } = useApp();
+  const { loading, error, gameSummaries, productGoals, pegsWithCosts, studies } = useApp();
 
   if (loading) return <LoadingSpinner />;
   if (error) return <ErrorBanner message={error} />;
@@ -42,7 +42,8 @@ export function GameDetail() {
   const gamePGs = productGoals.filter((pg) => pg.gameId === id);
   const gamePEGs = pegsWithCosts.filter((peg) => peg.gameId === id);
 
-  const phaseBreakdown = buildPhaseCostBreakdown(pegsWithCosts, id);
+  // Phase breakdown uses study-level Development Phase field
+  const phaseBreakdown = buildPhaseCostBreakdown(studies, id);
   const phaseChartData = phaseBreakdown.map((p) => ({
     name: p.phase,
     Actual: p.actualCost,

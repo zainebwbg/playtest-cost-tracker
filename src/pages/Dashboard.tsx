@@ -13,7 +13,7 @@ import {
   Pie,
   Cell,
 } from "recharts";
-import { useApp, buildPhaseCostBreakdown } from "../context/AppContext";
+import { useApp, buildPhaseCostBreakdown, buildPEGCostBreakdown } from "../context/AppContext";
 import {
   StatCard,
   PageHeader,
@@ -39,7 +39,7 @@ const STATUS_COLORS: Record<string, string> = {
 type CostMode = "actual" | "forecasted" | "both";
 
 export function Dashboard() {
-  const { loading, error, gameSummaries, pegsWithCosts, insights, isConfigured } = useApp();
+  const { loading, error, gameSummaries, pegsWithCosts, studies, insights, isConfigured } = useApp();
   const [costMode, setCostMode] = useState<CostMode>("both");
   const [selectedGameId, setSelectedGameId] = useState<string>("all");
 
@@ -85,11 +85,11 @@ export function Dashboard() {
   const totalInsights  = filteredPEGs.reduce((s, p) => s + p.insightCount, 0);
 
   // ─── Chart data ────────────────────────────────────────────────────────────
-  // When a specific game is selected → phase breakdown; otherwise → by-game comparison
-  const phaseBreakdown = buildPhaseCostBreakdown(
-    pegsWithCosts,
-    selectedGameId === "all" ? undefined : selectedGameId
-  );
+  const gameFilter = selectedGameId === "all" ? undefined : selectedGameId;
+
+  // Chart 1 — Cost by Game (all) or Cost by Development Phase (specific game)
+  // Phase breakdown is now STUDY-based (Development Phase field on each Study)
+  const phaseBreakdown = buildPhaseCostBreakdown(studies, gameFilter);
 
   const costChartData = selectedGameId === "all"
     ? gameSummaries.map((g) => ({
@@ -104,6 +104,17 @@ export function Dashboard() {
       }));
 
   const costChartLabel = selectedGameId === "all" ? "Cost by Game Title" : "Cost by Development Phase";
+
+  // Chart 2 — Cost per PX Goal (study costs split evenly across linked goals)
+  const pegCostBreakdown = buildPEGCostBreakdown(pegsWithCosts, gameFilter);
+  const pegCostChartData = pegCostBreakdown.slice(0, 10).map((p) => ({
+    name: p.pegName,
+    Actual: p.actualCost,
+    Forecasted: p.forecastedCost,
+  }));
+  const pegCostChartLabel = selectedGameId === "all"
+    ? "Cost by PX Goal (Top 10)"
+    : "Cost by PX Goal";
 
   // Status pie
   const statusCounts: Record<string, number> = {};
@@ -192,53 +203,82 @@ export function Dashboard() {
 
         {/* ── Charts ── */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          {/* Cost chart */}
+          {/* Chart 1 — Cost by Game or Cost by Development Phase */}
           <div className="bg-white rounded-lg border border-gray-200 p-5">
             <h2 className="text-sm font-semibold text-gray-700 mb-4">{costChartLabel}</h2>
-            <ResponsiveContainer width="100%" height={220}>
-              <BarChart data={costChartData} barCategoryGap="30%">
-                <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
-                <XAxis dataKey="name" tick={{ fontSize: 11 }} />
-                <YAxis tickFormatter={(v) => fmtCurrency(v as number)} tick={{ fontSize: 11 }} />
-                <Tooltip formatter={(v) => fmtCurrencyFull(v as number)} />
-                <Legend />
-                {(costMode === "actual"    || costMode === "both") && <Bar dataKey="Actual"     fill="#3b82f6" radius={[3, 3, 0, 0]} />}
-                {(costMode === "forecasted" || costMode === "both") && <Bar dataKey="Forecasted" fill="#93c5fd" radius={[3, 3, 0, 0]} />}
-              </BarChart>
-            </ResponsiveContainer>
-          </div>
-
-          {/* Status pie */}
-          <div className="bg-white rounded-lg border border-gray-200 p-5">
-            <h2 className="text-sm font-semibold text-gray-700 mb-4">Goals by Status</h2>
-            {statusPieData.length === 0 ? (
-              <p className="text-sm text-gray-400 py-10 text-center">No goals for this selection.</p>
+            {costChartData.length === 0 ? (
+              <p className="text-sm text-gray-400 py-10 text-center">
+                {selectedGameId === "all"
+                  ? "No game data yet."
+                  : "No studies with a Development Phase recorded yet. Set the phase on each study in Airtable."}
+              </p>
             ) : (
-              <div className="flex items-center gap-4">
-                <ResponsiveContainer width="50%" height={200}>
-                  <PieChart>
-                    <Pie data={statusPieData} cx="50%" cy="50%" innerRadius={55} outerRadius={85} dataKey="value" paddingAngle={2}>
-                      {statusPieData.map((entry) => (
-                        <Cell key={entry.name} fill={STATUS_COLORS[entry.name] ?? "#9ca3af"} />
-                      ))}
-                    </Pie>
-                    <Tooltip />
-                  </PieChart>
-                </ResponsiveContainer>
-                <div className="flex flex-col gap-2">
-                  {statusPieData.map((entry) => (
-                    <div key={entry.name} className="flex items-center gap-2">
-                      <div className="w-3 h-3 rounded-full flex-shrink-0" style={{ backgroundColor: STATUS_COLORS[entry.name] ?? "#9ca3af" }} />
-                      <span className="text-xs text-gray-600">
-                        {entry.name}{" "}
-                        <span className="font-semibold text-gray-900">{entry.value}</span>
-                      </span>
-                    </div>
-                  ))}
-                </div>
-              </div>
+              <ResponsiveContainer width="100%" height={220}>
+                <BarChart data={costChartData} barCategoryGap="30%">
+                  <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
+                  <XAxis dataKey="name" tick={{ fontSize: 11 }} />
+                  <YAxis tickFormatter={(v) => fmtCurrency(v as number)} tick={{ fontSize: 11 }} />
+                  <Tooltip formatter={(v) => fmtCurrencyFull(v as number)} />
+                  <Legend />
+                  {(costMode === "actual"     || costMode === "both") && <Bar dataKey="Actual"     fill="#3b82f6" radius={[3, 3, 0, 0]} />}
+                  {(costMode === "forecasted" || costMode === "both") && <Bar dataKey="Forecasted" fill="#93c5fd" radius={[3, 3, 0, 0]} />}
+                </BarChart>
+              </ResponsiveContainer>
             )}
           </div>
+
+          {/* Chart 2 — Cost by PX Goal */}
+          <div className="bg-white rounded-lg border border-gray-200 p-5">
+            <h2 className="text-sm font-semibold text-gray-700 mb-1">{pegCostChartLabel}</h2>
+            <p className="text-xs text-gray-400 mb-3">Study costs split evenly across linked PX Goals</p>
+            {pegCostChartData.length === 0 ? (
+              <p className="text-sm text-gray-400 py-10 text-center">No cost data yet.</p>
+            ) : (
+              <ResponsiveContainer width="100%" height={220}>
+                <BarChart data={pegCostChartData} layout="vertical" barCategoryGap="20%">
+                  <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" horizontal={false} />
+                  <XAxis type="number" tickFormatter={(v) => fmtCurrency(v as number)} tick={{ fontSize: 10 }} />
+                  <YAxis type="category" dataKey="name" width={120} tick={{ fontSize: 10 }} />
+                  <Tooltip formatter={(v) => fmtCurrencyFull(v as number)} />
+                  <Legend />
+                  {(costMode === "actual"     || costMode === "both") && <Bar dataKey="Actual"     fill="#3b82f6" radius={[0, 3, 3, 0]} />}
+                  {(costMode === "forecasted" || costMode === "both") && <Bar dataKey="Forecasted" fill="#93c5fd" radius={[0, 3, 3, 0]} />}
+                </BarChart>
+              </ResponsiveContainer>
+            )}
+          </div>
+        </div>
+
+        {/* ── Goals by Status ── */}
+        <div className="bg-white rounded-lg border border-gray-200 p-5">
+          <h2 className="text-sm font-semibold text-gray-700 mb-4">Goals by Status</h2>
+          {statusPieData.length === 0 ? (
+            <p className="text-sm text-gray-400 py-4 text-center">No goals for this selection.</p>
+          ) : (
+            <div className="flex items-center gap-6">
+              <ResponsiveContainer width={180} height={180}>
+                <PieChart>
+                  <Pie data={statusPieData} cx="50%" cy="50%" innerRadius={50} outerRadius={80} dataKey="value" paddingAngle={2}>
+                    {statusPieData.map((entry) => (
+                      <Cell key={entry.name} fill={STATUS_COLORS[entry.name] ?? "#9ca3af"} />
+                    ))}
+                  </Pie>
+                  <Tooltip />
+                </PieChart>
+              </ResponsiveContainer>
+              <div className="flex flex-wrap gap-x-8 gap-y-2">
+                {statusPieData.map((entry) => (
+                  <div key={entry.name} className="flex items-center gap-2">
+                    <div className="w-3 h-3 rounded-full flex-shrink-0" style={{ backgroundColor: STATUS_COLORS[entry.name] ?? "#9ca3af" }} />
+                    <span className="text-xs text-gray-600">
+                      {entry.name}{" "}
+                      <span className="font-semibold text-gray-900">{entry.value}</span>
+                    </span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
         </div>
 
         {/* ── Active Goals ── */}

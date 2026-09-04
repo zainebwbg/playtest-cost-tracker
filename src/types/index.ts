@@ -74,7 +74,8 @@ export interface PlayerExperienceGoalFields {
 
 export interface StudyFields {
   Name: string;
-  "Player Experience Goal": string[]; // linked record IDs
+  "Player Experience Goal": string[]; // linked record IDs (can be many)
+  "Development Phase"?: DevelopmentPhase;
   Type: StudyType;
   Status: StudyStatus;
   Date?: string;
@@ -123,10 +124,16 @@ export interface PlayerExperienceGoal {
 export interface Study {
   id: string;
   name: string;
+  /** All linked PX Goal IDs (cost split evenly across them). */
+  pegIds: string[];
+  pegNames: string[];
+  /** First pegId — kept for backward compatibility. */
   pegId: string;
   pegName: string;
   gameId: string;
   gameName: string;
+  /** Phase this study was conducted in — the basis for "Cost by Phase" chart. */
+  developmentPhase: DevelopmentPhase | null;
   type: StudyType;
   status: StudyStatus;
   date: string | null;
@@ -158,11 +165,21 @@ export interface GameSummary extends Game {
   completedPEGs: number;
 }
 
+/** Cost rolled up by the Development Phase recorded on each Study. */
 export interface PhaseCostBreakdown {
-  phase: DevelopmentPhase;
+  phase: string; // DevelopmentPhase or "Unset"
   actualCost: number;
   forecastedCost: number;
-  pegCount: number;
+  studyCount: number;
+}
+
+/** Cost allocated to a single PX Goal (split evenly across all PEGs on each study). */
+export interface PEGCostBreakdown {
+  pegId: string;
+  pegName: string;
+  gameName: string;
+  actualCost: number;
+  forecastedCost: number;
   studyCount: number;
 }
 

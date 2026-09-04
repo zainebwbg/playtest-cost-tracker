@@ -140,15 +140,21 @@ function normalizeStudy(
   pegsById: Map<string, PlayerExperienceGoal>
 ): Study {
   const f = record.fields;
-  const pegId = f["Player Experience Goal"]?.[0] ?? "";
-  const peg = pegsById.get(pegId);
+  // All linked PX Goals (multi-select linked record)
+  const pegIds  = f["Player Experience Goal"] ?? [];
+  const pegId   = pegIds[0] ?? "";
+  const pegs    = pegIds.map((pid) => pegsById.get(pid)).filter(Boolean) as PlayerExperienceGoal[];
+  const peg     = pegs[0];
   return {
     id: record.id,
     name: f.Name ?? "",
+    pegIds,
+    pegNames: pegs.map((p) => p.name),
     pegId,
     pegName: peg?.name ?? "",
     gameId: peg?.gameId ?? "",
     gameName: peg?.gameName ?? "",
+    developmentPhase: f["Development Phase"] ?? null,
     type: f.Type ?? "Playtest",
     status: f.Status ?? "Planned",
     date: f.Date ?? null,

@@ -21,6 +21,7 @@ import type {
   PEGWithCosts,
   GameSummary,
   PhaseCostBreakdown,
+  PEGCostBreakdown,
   DevelopmentPhase,
 } from "../types";
 
@@ -31,14 +32,30 @@ export function buildPEGsWithCosts(
   studies: Study[],
   insights: Insight[] = []
 ): PEGWithCosts[] {
+  // ── Which studies touch each PEG? ────────────────────────────────────────
   const studiesByPEG = new Map<string, Study[]>();
   for (const study of studies) {
-    const arr = studiesByPEG.get(study.pegId) ?? [];
-    arr.push(study);
-    studiesByPEG.set(study.pegId, arr);
+    // Use all linked pegIds (not just the first one)
+    const linkedIds = study.pegIds.length > 0 ? study.pegIds : (study.pegId ? [study.pegId] : []);
+    for (const pid of linkedIds) {
+      const arr = studiesByPEG.get(pid) ?? [];
+      arr.push(study);
+      studiesByPEG.set(pid, arr);
+    }
   }
 
-  // Build a map: pegId -> insights that reference this PEG directly
+  // ── Actual cost: split each study's cost evenly across linked PEGs ───────
+  const actualCostByPEG = new Map<string, number>();
+  for (const study of studies) {
+    const linkedIds = study.pegIds.length > 0 ? study.pegIds : (study.pegId ? [study.pegId] : []);
+    if (linkedIds.length === 0) continue;
+    const share = study.actualCost / linkedIds.length;
+    for (const pid of linkedIds) {
+      actualCostByPEG.set(pid, (actualCostByPEG.get(pid) ?? 0) + share);
+    }
+  }
+
+  // ── Insights: index directly by PEG ──────────────────────────────────────
   const insightsByPEG = new Map<string, Insight[]>();
   for (const insight of insights) {
     for (const pid of insight.pegIds) {
@@ -46,21 +63,13 @@ export function buildPEGsWithCosts(
       arr.push(insight);
       insightsByPEG.set(pid, arr);
     }
-    // Also index by the PEG linked through each study
-    for (const sid of insight.studyIds) {
-      const study = studies.find((s) => s.id === sid);
-      if (study?.pegId && !insight.pegIds.includes(study.pegId)) {
-        const arr = insightsByPEG.get(study.pegId) ?? [];
-        arr.push(insight);
-        insightsByPEG.set(study.pegId, arr);
-      }
-    }
   }
 
   return pegs.map((peg) => {
-    const pegStudies  = studiesByPEG.get(peg.id) ?? [];
-    const pegInsights = insightsByPEG.get(peg.id) ?? [];
-    const totalActualCost    = pegStudies.reduce((s, st) => s + st.actualCost, 0);
+    const pegStudies       = studiesByPEG.get(peg.id) ?? [];
+    const pegInsights      = insightsByPEG.get(peg.id) ?? [];
+    const totalActualCost  = actualCostByPEG.get(peg.id) ?? 0;
+    // Forecasted cost comes from the PEG's own "Forecasted Cost" field
     const totalForecastedCost = peg.forecastedCost;
     return {
       ...peg,
@@ -101,34 +110,35 @@ export function buildGameSummaries(
   });
 }
 
+/**
+ * Groups STUDIES by their "Development Phase" field and sums costs.
+ * Optionally filter to one game.
+ */
 export function buildPhaseCostBreakdown(
-  pegsWithCosts: PEGWithCosts[],
+  studies: Study[],
   gameId?: string
 ): PhaseCostBreakdown[] {
-  // Use a canonical order — phases not in this list appear at the end
   const PHASE_ORDER: DevelopmentPhase[] = [
     "Concept", "Pre Production", "Production", "Alpha", "Beta", "Launch",
   ];
 
   const filtered = gameId
-    ? pegsWithCosts.filter((p) => p.gameId === gameId)
-    : pegsWithCosts;
+    ? studies.filter((s) => s.gameId === gameId)
+    : studies;
 
-  // Group by whatever phase values actually exist in the data
-  const byPhase = new Map<string, typeof filtered>();
-  for (const p of filtered) {
-    const ph = p.developmentPhase || "Unset";
+  const byPhase = new Map<string, Study[]>();
+  for (const s of filtered) {
+    const ph = s.developmentPhase || "Unset";
     if (!byPhase.has(ph)) byPhase.set(ph, []);
-    byPhase.get(ph)!.push(p);
+    byPhase.get(ph)!.push(s);
   }
 
   return [...byPhase.entries()]
-    .map(([phase, pegs]) => ({
-      phase: phase as DevelopmentPhase,
-      actualCost:     pegs.reduce((s, p) => s + p.totalActualCost,     0),
-      forecastedCost: pegs.reduce((s, p) => s + p.totalForecastedCost, 0),
-      pegCount:       pegs.length,
-      studyCount:     pegs.reduce((s, p) => s + p.studyCount,          0),
+    .map(([phase, sts]) => ({
+      phase,
+      actualCost:     sts.reduce((acc, s) => acc + s.actualCost,     0),
+      forecastedCost: sts.reduce((acc, s) => acc + s.forecastedCost, 0),
+      studyCount:     sts.length,
     }))
     .sort((a, b) => {
       const ia = PHASE_ORDER.indexOf(a.phase as DevelopmentPhase);
@@ -138,6 +148,32 @@ export function buildPhaseCostBreakdown(
       if (ib === -1) return -1;
       return ia - ib;
     });
+}
+
+/**
+ * Builds a cost-per-PX-Goal breakdown for the given PEGs.
+ * Costs are already split at build time in buildPEGsWithCosts.
+ * Optionally filter to one game.
+ */
+export function buildPEGCostBreakdown(
+  pegsWithCosts: PEGWithCosts[],
+  gameId?: string
+): PEGCostBreakdown[] {
+  const filtered = gameId
+    ? pegsWithCosts.filter((p) => p.gameId === gameId)
+    : pegsWithCosts;
+
+  return filtered
+    .filter((p) => p.totalActualCost > 0 || p.totalForecastedCost > 0)
+    .map((p) => ({
+      pegId:          p.id,
+      pegName:        p.name.length > 22 ? p.name.slice(0, 22) + "…" : p.name,
+      gameName:       p.gameName,
+      actualCost:     p.totalActualCost,
+      forecastedCost: p.totalForecastedCost,
+      studyCount:     p.studyCount,
+    }))
+    .sort((a, b) => b.actualCost - a.actualCost);
 }
 
 // ─── Context ──────────────────────────────────────────────────────────────────
