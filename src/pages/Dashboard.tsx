@@ -9,9 +9,6 @@ import {
   Tooltip,
   Legend,
   ResponsiveContainer,
-  PieChart,
-  Pie,
-  Cell,
 } from "recharts";
 import { useApp, buildPhaseCostBreakdown, buildPEGCostBreakdown } from "../context/AppContext";
 import {
@@ -28,13 +25,6 @@ import {
 } from "../components/ui";
 import type { PEGWithCosts } from "../types";
 
-const STATUS_COLORS: Record<string, string> = {
-  Complete: "#10b981",
-  Measuring: "#3b82f6",
-  "In Progress": "#f59e0b",
-  Planning: "#6b7280",
-  "Not Started": "#d1d5db",
-};
 
 type CostMode = "actual" | "forecasted" | "both";
 
@@ -115,13 +105,6 @@ export function Dashboard() {
   const pegCostChartLabel = selectedGameId === "all"
     ? "Cost by PX Goal (Top 10)"
     : "Cost by PX Goal";
-
-  // Status pie
-  const statusCounts: Record<string, number> = {};
-  for (const p of filteredPEGs) {
-    statusCounts[p.status] = (statusCounts[p.status] ?? 0) + 1;
-  }
-  const statusPieData = Object.entries(statusCounts).map(([name, value]) => ({ name, value }));
 
   // Recent active goals
   const recentPEGs = [...filteredPEGs]
@@ -248,37 +231,6 @@ export function Dashboard() {
           </div>
         </div>
 
-        {/* ── Goals by Status ── */}
-        <div className="bg-white rounded-lg border border-gray-200 p-5">
-          <h2 className="text-sm font-semibold text-gray-700 mb-4">Goals by Status</h2>
-          {statusPieData.length === 0 ? (
-            <p className="text-sm text-gray-400 py-4 text-center">No goals for this selection.</p>
-          ) : (
-            <div className="flex items-center gap-6">
-              <ResponsiveContainer width={180} height={180}>
-                <PieChart>
-                  <Pie data={statusPieData} cx="50%" cy="50%" innerRadius={50} outerRadius={80} dataKey="value" paddingAngle={2}>
-                    {statusPieData.map((entry) => (
-                      <Cell key={entry.name} fill={STATUS_COLORS[entry.name] ?? "#9ca3af"} />
-                    ))}
-                  </Pie>
-                  <Tooltip />
-                </PieChart>
-              </ResponsiveContainer>
-              <div className="flex flex-wrap gap-x-8 gap-y-2">
-                {statusPieData.map((entry) => (
-                  <div key={entry.name} className="flex items-center gap-2">
-                    <div className="w-3 h-3 rounded-full flex-shrink-0" style={{ backgroundColor: STATUS_COLORS[entry.name] ?? "#9ca3af" }} />
-                    <span className="text-xs text-gray-600">
-                      {entry.name}{" "}
-                      <span className="font-semibold text-gray-900">{entry.value}</span>
-                    </span>
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
-        </div>
 
         {/* ── Active Goals ── */}
         <div className="bg-white rounded-lg border border-gray-200">
