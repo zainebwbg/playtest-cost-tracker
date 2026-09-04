@@ -89,7 +89,6 @@ export function Dashboard() {
   const totalActual    = filteredPEGs.reduce((s, p) => s + p.totalActualCost, 0);
   const totalVariance  = totalForecast - totalActual;
   const totalStudies   = filteredPEGs.reduce((s, p) => s + p.studyCount, 0);
-  const completedPEGs  = filteredPEGs.filter((p) => p.status === "Complete").length;
   const totalInsights  = filteredPEGs.reduce((s, p) => s + p.insightCount, 0);
 
   // ─── Chart data ────────────────────────────────────────────────────────────
@@ -197,7 +196,6 @@ export function Dashboard() {
           <StatCard label="Total Forecasted"    value={fmtCurrency(totalForecast)}         sub={fmtCurrencyFull(totalForecast)} />
           <StatCard label="Total Actual Spend"  value={fmtCurrency(totalActual)}           sub={fmtCurrencyFull(totalActual)}   tone={totalActual > totalForecast ? "danger" : "default"} />
           <StatCard label={totalVariance >= 0 ? "Budget Remaining" : "Over Budget"} value={fmtCurrency(Math.abs(totalVariance))} tone={totalVariance >= 0 ? "success" : "danger"} />
-          <StatCard label="Goals Complete"      value={`${completedPEGs} / ${filteredPEGs.length}`} tone="info" />
           <StatCard label="Studies Conducted"   value={String(totalStudies)} />
           <StatCard label="Insights Captured"   value={String(totalInsights)} tone={totalInsights > 0 ? "success" : "default"} />
         </div>
