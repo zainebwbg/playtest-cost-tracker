@@ -183,7 +183,6 @@ export function GameDetail() {
                               </div>
                             </div>
                             <div className="flex items-center gap-3 flex-shrink-0">
-                              <PhaseBadge phase={peg.developmentPhase} />
                               <StatusBadge status={peg.status} />
                               <div className="text-right">
                                 <p className="text-sm font-medium text-gray-900">

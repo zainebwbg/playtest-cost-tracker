@@ -104,21 +104,34 @@ export function Reports() {
       <PageHeader
         title="Cost Reports"
         subtitle="Actual vs. forecasted spend analysis across phases and titles"
-        actions={
-          <select
-            value={selectedGame}
-            onChange={(e) => setSelectedGame(e.target.value)}
-            className="border border-gray-200 rounded-md px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-          >
-            <option value="all">All Games</option>
-            {gameSummaries.map((g) => (
-              <option key={g.id} value={g.id}>
-                {g.name}
-              </option>
-            ))}
-          </select>
-        }
       />
+
+      {/* ── Game filter pills ── */}
+      <div className="px-8 pt-4 pb-0 flex flex-wrap items-center gap-2">
+        <button
+          onClick={() => setSelectedGame("all")}
+          className={`px-3 py-1.5 rounded-full text-xs font-medium border transition-colors ${
+            selectedGame === "all"
+              ? "bg-blue-600 border-blue-600 text-white"
+              : "bg-white border-gray-200 text-gray-600 hover:border-blue-300 hover:text-blue-600"
+          }`}
+        >
+          All Games
+        </button>
+        {gameSummaries.map((g) => (
+          <button
+            key={g.id}
+            onClick={() => setSelectedGame(g.id)}
+            className={`px-3 py-1.5 rounded-full text-xs font-medium border transition-colors ${
+              selectedGame === g.id
+                ? "bg-blue-600 border-blue-600 text-white"
+                : "bg-white border-gray-200 text-gray-600 hover:border-blue-300 hover:text-blue-600"
+            }`}
+          >
+            {g.name}
+          </button>
+        ))}
+      </div>
 
       <div className="px-8 py-6 space-y-6">
         {/* ── Budget Variance by Game ── */}
@@ -296,7 +309,7 @@ export function Reports() {
               <table className="min-w-full divide-y divide-gray-100">
                 <thead className="bg-gray-50">
                   <tr>
-                    {["Goal", "Game", "Phase", "Actual", "Forecasted", "Over by"].map((h) => (
+                    {["Goal", "Game", "Actual", "Forecasted", "Over by"].map((h) => (
                       <th
                         key={h}
                         className="px-4 py-2.5 text-left text-xs font-semibold text-gray-500 uppercase tracking-wide"
@@ -314,9 +327,6 @@ export function Reports() {
                       </td>
                       <td className="px-4 py-3 text-sm text-gray-500">
                         {peg.gameName}
-                      </td>
-                      <td className="px-4 py-3">
-                        <PhaseBadge phase={peg.developmentPhase} />
                       </td>
                       <td className="px-4 py-3 text-sm font-medium text-gray-900">
                         {fmtCurrencyFull(peg.totalActualCost)}
@@ -346,7 +356,7 @@ export function Reports() {
             <table className="min-w-full divide-y divide-gray-100">
               <thead className="bg-gray-50">
                 <tr>
-                  {["Goal", "Game", "Phase", "Status", "Actual Cost", "Studies", "Variance"].map(
+                  {["Goal", "Game", "Status", "Actual Cost", "Studies", "Variance"].map(
                     (h) => (
                       <th
                         key={h}
@@ -365,9 +375,6 @@ export function Reports() {
                       {peg.name}
                     </td>
                     <td className="px-4 py-3 text-sm text-gray-500">{peg.gameName}</td>
-                    <td className="px-4 py-3">
-                      <PhaseBadge phase={peg.developmentPhase} />
-                    </td>
                     <td className="px-4 py-3 text-sm text-gray-500">{peg.status}</td>
                     <td className="px-4 py-3 text-sm font-semibold text-gray-900">
                       {fmtCurrencyFull(peg.totalActualCost)}

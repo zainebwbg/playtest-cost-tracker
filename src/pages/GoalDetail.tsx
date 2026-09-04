@@ -65,7 +65,6 @@ export function GoalDetail() {
         subtitle={`${peg.gameName} · ${peg.productGoalName}`}
         actions={
           <div className="flex items-center gap-2">
-            <PhaseBadge phase={peg.developmentPhase} />
             <StatusBadge status={peg.status} />
           </div>
         }

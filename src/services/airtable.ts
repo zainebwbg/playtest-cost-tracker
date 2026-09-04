@@ -128,7 +128,6 @@ function normalizePEG(
     productGoalName: productGoal?.name ?? "",
     gameId: productGoal?.gameId ?? "",
     gameName: game?.name ?? "",
-    developmentPhase: f["Development Phase"] ?? "Concept",
     status: f.Status ?? "Not Started",
     forecastedCost: f["Forecasted Cost"] ?? 0,
     notes: f.Notes ?? "",

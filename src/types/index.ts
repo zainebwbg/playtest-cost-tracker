@@ -66,7 +66,6 @@ export interface PlayerExperienceGoalFields {
   Name: string;
   Description?: string;
   "Product Goal": string[]; // linked record IDs
-  "Development Phase": DevelopmentPhase;
   Status: GoalStatus;
   "Forecasted Cost": number;
   Notes?: string;
@@ -115,7 +114,6 @@ export interface PlayerExperienceGoal {
   productGoalName: string;
   gameId: string;
   gameName: string;
-  developmentPhase: DevelopmentPhase;
   status: GoalStatus;
   forecastedCost: number;
   notes: string;
@@ -219,7 +217,6 @@ export interface Insight {
 
 export interface GoalFilters {
   gameId: string | null;
-  phase: DevelopmentPhase | null;
   status: GoalStatus | null;
   costMode: "actual" | "forecasted" | "both";
 }

@@ -108,7 +108,6 @@ function PEGInsightCard({
             >
               {peg.name}
             </Link>
-            <PhaseBadge phase={peg.developmentPhase} />
             <StatusBadge status={peg.status} />
           </div>
           {showGame && (
@@ -241,7 +240,6 @@ export function Goals() {
   const { loading, error, pegsWithCosts, gameSummaries } = useApp();
 
   const [selectedGameId, setSelectedGameId] = useState<string>("all");
-  const [phaseFilter,    setPhaseFilter]    = useState<DevelopmentPhase | "all">("all");
   const [statusFilter,   setStatusFilter]   = useState<GoalStatus | "all">("all");
   const [search,         setSearch]         = useState("");
 
@@ -249,7 +247,6 @@ export function Goals() {
   const filteredPEGs = useMemo<PEGWithCosts[]>(() => {
     return pegsWithCosts.filter((p) => {
       if (selectedGameId !== "all" && p.gameId !== selectedGameId) return false;
-      if (phaseFilter    !== "all" && p.developmentPhase !== phaseFilter)  return false;
       if (statusFilter   !== "all" && p.status           !== statusFilter) return false;
       if (search) {
         const q = search.toLowerCase();
@@ -267,7 +264,7 @@ export function Goals() {
       }
       return true;
     });
-  }, [pegsWithCosts, selectedGameId, phaseFilter, statusFilter, search]);
+  }, [pegsWithCosts, selectedGameId, statusFilter, search]);
 
   // Group by game for display
   const groups = useMemo(() => {
@@ -330,14 +327,6 @@ export function Goals() {
           className="border border-gray-200 rounded-md px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 w-52"
         />
         <select
-          value={phaseFilter}
-          onChange={(e) => setPhaseFilter(e.target.value as DevelopmentPhase | "all")}
-          className="border border-gray-200 rounded-md px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-        >
-          <option value="all">All Phases</option>
-          {PHASES.map((p) => <option key={p} value={p}>{p}</option>)}
-        </select>
-        <select
           value={statusFilter}
           onChange={(e) => setStatusFilter(e.target.value as GoalStatus | "all")}
           className="border border-gray-200 rounded-md px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
@@ -345,9 +334,9 @@ export function Goals() {
           <option value="all">All Statuses</option>
           {STATUSES.map((s) => <option key={s} value={s}>{s}</option>)}
         </select>
-        {(phaseFilter !== "all" || statusFilter !== "all" || search) && (
+        {(statusFilter !== "all" || search) && (
           <button
-            onClick={() => { setPhaseFilter("all"); setStatusFilter("all"); setSearch(""); }}
+            onClick={() => { setStatusFilter("all"); setSearch(""); }}
             className="text-xs text-gray-400 hover:text-gray-600 underline"
           >
             Clear filters
